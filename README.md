@@ -1,57 +1,79 @@
-# 🛠️ OYAX - Windows Bakım Aracı
+# <p align="center">🛠️ OYAX - Windows Bakım Aracı</p>
 
-![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.14-blue.svg)
-![License](https://img.shields.io/badge/license-VDS_License-red.svg)
-![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)
-![Repo](https://img.shields.io/badge/repo-OYAX-green.svg)
+<p align="center">
+  <img src="[https://img.shields.io/badge/version-1.0.0-blue.svg](https://img.shields.io/badge/version-1.0.0-blue.svg)" alt="Version">
+  <img src="[https://img.shields.io/badge/python-3.10%2B-blue.svg](https://img.shields.io/badge/python-3.10%2B-blue.svg)" alt="Python">
+  <img src="[https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg](https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg)" alt="License">
+  <img src="[https://img.shields.io/badge/platform-windows-lightgrey.svg](https://img.shields.io/badge/platform-windows-lightgrey.svg)" alt="Platform">
+  <img src="[https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)" alt="Stars">
+</p>
 
-OYAX, Windows işletim sistemi üzerinde sık kullanılan bakım ve optimizasyon işlemlerini tek bir arayüzden yönetmenizi sağlayan güçlü bir araçtır.
+---
 
-## ✨ Özellikler
+**OYAX**, Windows işletim sistemi üzerinde performans artırıcı bakım ve kritik onarım işlemlerini tek bir arayüzden yönetmenizi sağlayan, açık kaynak kodlu ancak güvenli lisans doğrulama sistemine sahip bir optimizasyon aracıdır.
 
-- 🗂️ **Kategori Bazlı Menü:** Geçici dosyalar, Ağ/DNS, Sistem Sağlığı gibi gruplandırılmış görevler.
-- 🧹 **Gelişmiş Temizlik:** `Temp`, `Prefetch`, `Recycle Bin` ve `Windows Store` önbellek temizliği.
-- 🌐 **Ağ Optimizasyonu:** `DNS` temizleme, `IP` yenileme ve `Winsock` sıfırlama araçları.
-- 🛡️ **Sistem Onarımı:** `SFC`, `DISM` ve `chkdsk` gibi kritik sistem onarım komutları.
-- 🚀 **Hızlı Bakım:** En önemli görevleri tek tıkla çalıştıran özel mod.
-- 📊 **Log Sistemi:** Yapılan tüm işlemlerin SQLite tabanlı kaydı ve CSV dışa aktarma desteği.
-- 🔑 **Lisans Yönetimi:** Güvenli lisans kontrol sistemi.
+## ✨ Öne Çıkan Özellikler
+
+- 🗂️ **Kategorize Edilmiş Menü:** Geçici dosyalar, Ağ/DNS ve Sistem Sağlığı için ayrılmış kontrol panelleri.
+- 🧹 **Gelişmiş Temizlik:** 
+  - `Temp` ve `Prefetch` dizinleri.
+  - Geri Dönüşüm Kutusu (Recycle Bin).
+  - Windows Store önbelleği.
+- 🌐 **Ağ & DNS Optimizasyonu:** 
+  - DNS önbelleği temizleme (Flush DNS).
+  - IP yenileme (Release/Renew).
+  - Winsock protokolü sıfırlama.
+- 🛡️ **Kritik Sistem Onarımı:** 
+  - `SFC Scannow` ile dosya doğrulama.
+  - `DISM` araçları ile imaj onarımı.
+  - `chkdsk` disk hataları taraması.
+- 🚀 **Hızlı Bakım Modu:** En kritik görevleri tek tıkla sıralı olarak çalıştırır.
+- 📊 **SQLite Kayıt Defteri:** Yapılan işlemlerin geçmişini tutar ve CSV olarak dışa aktarmanıza olanak tanır.
+- 🔑 **VDS Lisans Sistemi:** Uygulama güvenliği için VDS tabanlı HWID eşleştirmeli doğrulama.
 
 ## 📸 Ekran Görüntüleri
 
-| Ana Ekran | Lisans Kontrol |
+| Ana Kontrol Paneli | Lisans Doğrulama |
 | :---: | :---: |
-| ![Ana Ekran](https://via.placeholder.com/400x250?text=Ana+Ekran) | ![Lisans Kontrol](https://via.placeholder.com/400x250?text=Lisans+Kontrol) |
+| ![Ana Ekran](https://via.placeholder.com/400x250?text=OYAX+Dashboard) | ![Lisans Kontrol](https://via.placeholder.com/400x250?text=VDS+Auth+System) |
 
-## 🚀 Kurulum ve Çalıştırma
+## 🚀 Kurulum ve Kullanım
 
-Uygulamayı EXE olarak kullanabilir veya kaynak kodundan çalıştırabilirsiniz.
+Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin.
 
-### En Güncel Sürümü İndirin
-En son yayınlanan stabil sürümü (EXE) indirmek için **[GitHub Releases](https://github.com/furkanyasarr0/OYAX/releases)** sayfasını ziyaret edebilirsiniz.
+### Ön Gereksinimler
+- Python 3.10 veya üzeri bir sürümün yüklü olması gerekmektedir.
+- Windows işletim sistemi (Bazı komutlar yönetici yetkisi gerektirir).
 
-### Kaynak Koddan Çalıştırma
-1. Python 3.10+ yüklü olduğundan emin olun.
-2. Projeyi indirin.
-3. Bağımlılıkları kontrol edin (Standart kütüphaneler kullanılır).
-4. Çalıştırın:
+### Çalıştırma Adımları
+1. Proje reposunu klonlayın veya indirin.
+2. Komut satırında proje dizinine gidin.
+3. Sanal ortamınızı (venv) oluşturun ve aktif edin:
    ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+4. Uygulamayı başlatın:
+   
+```powershell
    python app.py
    ```
 
-> ⚠️ **Not:** Yönetici yetkisi gerektiren işlemler için uygulamayı **Yönetici Olarak** çalıştırmanız önerilir.
+> [!IMPORTANT]
+> Sistem dosyalarına müdahale eden (SFC/DISM vb.) özelliklerin doğru çalışabilmesi için uygulamayı **Yönetici Olarak Çalıştır** seçeneğiyle açmanız önerilir.
 
-## 🛠️ Teknik Detaylar
+## 🛠️ Teknik Altyapı
 
-- **Dil:** Python
-- **Arayüz:** Tkinter (Modernize edilmiş UI)
-- **Veritabanı:** SQLite3
-- **Güvenlik:** Modüler lisans sistemi
+- **Programlama Dili:** Python
+- **Arayüz (UI):** Tkinter (Modernize edilmiş, kullanıcı dostu tema)
+- **Veritabanı:** SQLite3 (İşlem logları için)
+- **Güvenlik:** Uzak VDS sunucu üzerinden HWID tabanlı API doğrulaması.
 
-## 🛡️ Lisans
+## 🛡️ Lisans ve Kullanım Koşulları
 
-Bu proje **Ticari/Özel (Proprietary)** bir lisans altındadır. İzinsiz kopyalanamaz veya dağıtılamaz.
+Bu projenin kaynak kodları **Açık Kaynak (Open Source)** olarak paylaşılmıştır. Kod yapısını inceleyebilir ve geliştirmeye katkıda bulunabilirsiniz. 
+
+Ancak, uygulamanın tam fonksiyonel olarak çalışması ve yetkilendirme işlemleri, geliştirici tarafından yönetilen **VDS_License** (Özel VDS Doğrulama) sistemine tabidir. İzinsiz ticari dağıtımı yasaktır.
 
 ---
-Developed by **furkanysrr0**
+**Geliştirici:** [furkanysrr0](https://github.com/furkanyasarr0)
