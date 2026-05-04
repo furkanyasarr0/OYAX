@@ -1,12 +1,14 @@
-# <p align="center">🛠️ OYAX - Windows Bakım Aracı</p>
+<div align="center">
+  
+# 🛠️ OYAX - Windows Bakım Aracı
 
-<p align="center">
-  <img src="[https://img.shields.io/badge/version-1.0.0-blue.svg](https://img.shields.io/badge/version-1.0.0-blue.svg)" alt="Version">
-  <img src="[https://img.shields.io/badge/python-3.10%2B-blue.svg](https://img.shields.io/badge/python-3.10%2B-blue.svg)" alt="Python">
-  <img src="[https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg](https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg)" alt="License">
-  <img src="[https://img.shields.io/badge/platform-windows-lightgrey.svg](https://img.shields.io/badge/platform-windows-lightgrey.svg)" alt="Platform">
-  <img src="[https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)" alt="Stars">
-</p>
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#)
+[![License](https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg)](#)
+[![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#)
+[![Stars](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)](https://github.com/furkanyasarr0/OYAX)
+
+</div>
 
 ---
 
