@@ -1,6 +1,6 @@
 <div align="center">
   
-# 🛠️ OYAX - Windows Bakım Aracı
+# 🛠️ OYAX - Windows Maintenance Tool
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#)
@@ -12,70 +12,70 @@
 
 ---
 
-**OYAX**, Windows işletim sistemi üzerinde performans artırıcı bakım ve kritik onarım işlemlerini tek bir arayüzden yönetmenizi sağlayan, açık kaynak kodlu ancak güvenli lisans doğrulama sistemine sahip bir optimizasyon aracıdır.
+**OYAX** is an open-source optimization tool with a secure license verification system that allows you to manage performance-enhancing maintenance and critical repair operations on the Windows operating system from a single interface.
 
-## ✨ Öne Çıkan Özellikler
+## ✨ Key Features
 
-- 🗂️ **Kategorize Edilmiş Menü:** Geçici dosyalar, Ağ/DNS ve Sistem Sağlığı için ayrılmış kontrol panelleri.
-- 🧹 **Gelişmiş Temizlik:** 
-  - `Temp` ve `Prefetch` dizinleri.
-  - Geri Dönüşüm Kutusu (Recycle Bin).
-  - Windows Store önbelleği.
-- 🌐 **Ağ & DNS Optimizasyonu:** 
-  - DNS önbelleği temizleme (Flush DNS).
-  - IP yenileme (Release/Renew).
-  - Winsock protokolü sıfırlama.
-- 🛡️ **Kritik Sistem Onarımı:** 
-  - `SFC Scannow` ile dosya doğrulama.
-  - `DISM` araçları ile imaj onarımı.
-  - `chkdsk` disk hataları taraması.
-- 🚀 **Hızlı Bakım Modu:** En kritik görevleri tek tıkla sıralı olarak çalıştırır.
-- 📊 **SQLite Kayıt Defteri:** Yapılan işlemlerin geçmişini tutar ve CSV olarak dışa aktarmanıza olanak tanır.
-- 🔑 **VDS Lisans Sistemi:** Uygulama güvenliği için VDS tabanlı HWID eşleştirmeli doğrulama.
+- 🗂️ **Categorized Menu:** Dedicated control panels for Temporary files, Network/DNS, and System Health.
+- 🧹 **Advanced Cleaning:** 
+  - `Temp` and `Prefetch` directories.
+  - Recycle Bin.
+  - Windows Store cache.
+- 🌐 **Network & DNS Optimization:** 
+  - Flush DNS cache.
+  - IP Release/Renew.
+  - Winsock protocol reset.
+- 🛡️ **Critical System Repair:** 
+  - File verification with `SFC Scannow`.
+  - Image repair with `DISM` tools.
+  - `chkdsk` disk error scanning.
+- 🚀 **Quick Maintenance Mode:** Runs the most critical tasks sequentially with a single click.
+- 📊 **SQLite Registry:** Keeps a history of operations and allows you to export as CSV.
+- 🔑 **VDS License System:** VDS-based HWID matched verification for application security.
 
-## 📸 Ekran Görüntüleri
+## 📸 Screenshots
 
-| Ana Kontrol Paneli | Lisans Doğrulama |
+| Main Control Panel | License Verification |
 | :---: | :---: |
-| ![Ana Ekran](https://via.placeholder.com/400x250?text=OYAX+Dashboard) | ![Lisans Kontrol](https://via.placeholder.com/400x250?text=VDS+Auth+System) |
+| ![Main Screen](https://via.placeholder.com/400x250?text=OYAX+Dashboard) | ![License Control](https://via.placeholder.com/400x250?text=VDS+Auth+System) |
 
-## 🚀 Kurulum ve Kullanım
+## 🚀 Installation and Usage
 
-Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin.
+Follow the steps below to run the project on your computer.
 
-### Ön Gereksinimler
-- Python 3.10 veya üzeri bir sürümün yüklü olması gerekmektedir.
-- Windows işletim sistemi (Bazı komutlar yönetici yetkisi gerektirir).
+### Prerequisites
+- Python 3.10 or higher must be installed.
+- Windows operating system (Some commands require administrator privileges).
 
-### Çalıştırma Adımları
-1. Proje reposunu klonlayın veya indirin.
-2. Komut satırında proje dizinine gidin.
-3. Sanal ortamınızı (venv) oluşturun ve aktif edin:
+### Execution Steps
+1. Clone or download the project repo.
+2. Navigate to the project directory in the command line.
+3. Create and activate your virtual environment (venv):
    ```powershell
    python -m venv venv
    .\venv\Scripts\activate
    ```
-4. Uygulamayı başlatın:
+4. Start the application:
    
 ```powershell
    python app.py
    ```
 
 > [!IMPORTANT]
-> Sistem dosyalarına müdahale eden (SFC/DISM vb.) özelliklerin doğru çalışabilmesi için uygulamayı **Yönetici Olarak Çalıştır** seçeneğiyle açmanız önerilir.
+> It is recommended to open the application with the **Run as Administrator** option for features that interact with system files (SFC/DISM etc.) to function correctly.
 
-## 🛠️ Teknik Altyapı
+## 🛠️ Technical Infrastructure
 
-- **Programlama Dili:** Python
-- **Arayüz (UI):** Tkinter (Modernize edilmiş, kullanıcı dostu tema)
-- **Veritabanı:** SQLite3 (İşlem logları için)
-- **Güvenlik:** Uzak VDS sunucu üzerinden HWID tabanlı API doğrulaması.
+- **Programming Language:** Python
+- **Interface (UI):** Tkinter (Modernized, user-friendly theme)
+- **Database:** SQLite3 (For transaction logs)
+- **Security:** HWID-based API verification via remote VDS server.
 
-## 🛡️ Lisans ve Kullanım Koşulları
+## 🛡️ License and Terms of Use
 
-Bu projenin kaynak kodları **Açık Kaynak (Open Source)** olarak paylaşılmıştır. Kod yapısını inceleyebilir ve geliştirmeye katkıda bulunabilirsiniz. 
+The source codes of this project are shared as **Open Source**. You can examine the code structure and contribute to its development.
 
-Ancak, uygulamanın tam fonksiyonel olarak çalışması ve yetkilendirme işlemleri, geliştirici tarafından yönetilen **VDS_License** (Özel VDS Doğrulama) sistemine tabidir. İzinsiz ticari dağıtımı yasaktır.
+However, the full functional operation and authorization processes of the application are subject to the **VDS_License** (Private VDS Verification) system managed by the developer. Unauthorized commercial distribution is prohibited.
 
 ---
-**Geliştirici:** [furkanysrr0](https://github.com/furkanyasarr0)
+**Developer:** [furkanysrr0](https://github.com/furkanyasarr0)
