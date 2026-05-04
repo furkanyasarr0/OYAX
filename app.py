@@ -16,8 +16,13 @@ from tkinter import ttk, filedialog
 from license_system import OyaxLicense
 
 
-DB_FILE = "maintenance_logs.db"
-LICENSE_DB = "licenses.db"
+# AppData yolunu bul ve Oyax klasörü yoksa oluştur
+APPDATA_PATH = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Oyax')
+if not os.path.exists(APPDATA_PATH):
+    os.makedirs(APPDATA_PATH)
+
+DB_FILE = os.path.join(APPDATA_PATH, "maintenance_logs.db")
+LICENSE_DB = os.path.join(APPDATA_PATH, "licenses.db")
 APP_VERSION = "1.0"
 AUTHOR_NAME = "furkanysrr0"
 
@@ -996,15 +1001,9 @@ class MaintenanceApp(tk.Tk):
         thread.start()
 
     def _update_check_worker(self, status_var: tk.StringVar, repo_var: tk.StringVar) -> None:
-        repo_name = self.detect_github_repo()
-        if not repo_name:
-            self.after(
-                0,
-                lambda: status_var.set("Durum: GitHub repo bulunamadi. Origin URL ayarlanmali."),
-            )
-            return
-
+        repo_name = "furkanyasarr0/OYAX"
         self.after(0, lambda: repo_var.set(f"GitHub Repo: {repo_name}"))
+        
         url = f"https://api.github.com/repos/{repo_name}/releases/latest"
         try:
             request = urllib.request.Request(
