@@ -27,6 +27,9 @@ OYAX, Windows işletim sistemi üzerinde sık kullanılan bakım ve optimizasyon
 
 Uygulamayı EXE olarak kullanabilir veya kaynak kodundan çalıştırabilirsiniz.
 
+### En Güncel Sürümü İndirin
+En son yayınlanan stabil sürümü (EXE) indirmek için **[GitHub Releases](https://github.com/furkanyasarr0/OYAX/releases)** sayfasını ziyaret edebilirsiniz.
+
 ### Kaynak Koddan Çalıştırma
 1. Python 3.10+ yüklü olduğundan emin olun.
 2. Projeyi indirin.
