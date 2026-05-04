@@ -1,9 +1,10 @@
 # 🛠️ OYAX - Windows Bakım Aracı
 
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-![License](https://img.shields.io/badge/license-proprietary-red.svg)
+![Python](https://img.shields.io/badge/python-3.14-blue.svg)
+![License](https://img.shields.io/badge/license-VDS_License-red.svg)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)
+![Repo](https://img.shields.io/badge/repo-OYAX-green.svg)
 
 OYAX, Windows işletim sistemi üzerinde sık kullanılan bakım ve optimizasyon işlemlerini tek bir arayüzden yönetmenizi sağlayan güçlü bir araçtır.
 
