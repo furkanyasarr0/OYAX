@@ -427,8 +427,8 @@ class MaintenanceApp(tk.Tk):
 
         filter_box = ttk.Frame(menu_content, style="TaskCard.TFrame", padding=10)
         filter_box.pack(fill=X, pady=(0, 8))
-        ttk.Label(filter_box, text="Filtre ve Secim", style="TaskMenuTitle.TLabel").pack(anchor="w", pady=(0, 8))
-        ttk.Label(filter_box, text="Kategori secimi ile gorevleri filtrele.", style="TaskMenuSub.TLabel").pack(
+        ttk.Label(filter_box, text="Filtre ve Seçim", style="TaskMenuTitle.TLabel").pack(anchor="w", pady=(0, 8))
+        ttk.Label(filter_box, text="Kategori seçimi ile görevleri filtrele.", style="TaskMenuSub.TLabel").pack(
             anchor="w", pady=(0, 8)
         )
 
@@ -452,7 +452,7 @@ class MaintenanceApp(tk.Tk):
 
         task_header = ttk.Frame(menu_content, style="TaskMenu.TFrame")
         task_header.pack(fill=X, pady=(0, 6))
-        ttk.Label(task_header, text="Uygulanabilir Gorevler", style="TaskMenuTitle.TLabel").pack(side=LEFT)
+        ttk.Label(task_header, text="Uygulanabilir Görevler", style="TaskMenuTitle.TLabel").pack(side=LEFT)
         self.visible_tasks_var = tk.StringVar(value="Görünen: 0")
         ttk.Label(task_header, textvariable=self.visible_tasks_var, style="TaskMenuSub.TLabel").pack(side=RIGHT)
         ttk.Label(menu_content, text="Ctrl ile çoklu seçim yapabilirsin.", style="TaskMenuSub.TLabel").pack(
@@ -514,10 +514,10 @@ class MaintenanceApp(tk.Tk):
         right_panel = ttk.Frame(main_frame, style="Card.TFrame")
         right_panel.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        custom_box = ttk.LabelFrame(right_panel, text="Ozel Komut (CMD)", style="Section.TLabelframe", padding=8)
+        custom_box = ttk.LabelFrame(right_panel, text="Özel Komut (CMD)", style="Section.TLabelframe", padding=8)
         custom_box.pack(fill=X, pady=(0, 10))
 
-        ttk.Label(custom_box, text="Komut Girisi:", style="Muted.TLabel").pack(anchor="w")
+        ttk.Label(custom_box, text="Komut Girişi:", style="Muted.TLabel").pack(anchor="w")
         self.custom_command_var = tk.StringVar()
         self.custom_command_entry = ttk.Entry(custom_box, textvariable=self.custom_command_var)
         self.custom_command_entry.pack(fill=X, pady=(4, 6))
@@ -532,7 +532,7 @@ class MaintenanceApp(tk.Tk):
         ).pack(side=LEFT)
 
         self.custom_run_btn = ttk.Button(
-            custom_actions, text="Ozel Komutu Calistir", style="Primary.TButton", command=self.run_custom_command
+            custom_actions, text="Özel Komutu Çalıştır", style="Primary.TButton", command=self.run_custom_command
         )
         self.custom_run_btn.pack(side=RIGHT)
 
@@ -689,13 +689,13 @@ class MaintenanceApp(tk.Tk):
     def update_selection_summary(self) -> None:
         selected_count = len(self.selected_task_names)
         admin_count = sum(1 for name in self.selected_task_names if TASKS[name].get("requires_admin"))
-        self.selection_summary_var.set(f"Secili gorev: {selected_count}")
+        self.selection_summary_var.set(f"Seçili gorev: {selected_count}")
         self.admin_required_var.set(f"Admin gerektiren: {admin_count}")
         admin_mode_enabled = is_admin()
-        self.admin_note_var.set(f"Admin modu: {'Acik' if admin_mode_enabled else 'Kapali'}")
+        self.admin_note_var.set(f"Admin Modu: {'Açık' if admin_mode_enabled else 'Kapalı'}")
         self.admin_required_badge.configure(style="StatusWarn.TLabel" if admin_count > 0 else "StatusGood.TLabel")
         self.admin_mode_badge.configure(style="StatusGood.TLabel" if admin_mode_enabled else "StatusNeutral.TLabel")
-        self.visible_tasks_var.set(f"Gorunen: {len(self.visible_task_display_names)} | Secili: {selected_count}")
+        self.visible_tasks_var.set(f"Görünen: {len(self.visible_task_display_names)} | Seçili: {selected_count}")
 
     def on_task_listbox_select(self, _event=None) -> None:
         visible_set = set(self.visible_task_display_names)
@@ -718,7 +718,7 @@ class MaintenanceApp(tk.Tk):
             return
 
         if any(task.get("requires_admin") for _, task in selected_tasks) and not is_admin():
-            messagebox.showwarning("Yönetici Yetkisi Gerekli", "Seçili görevler yönetici gerektiriyor.")
+            messagebox.showwarning("OYAX - Yönetici Yetkisi Gerekli", "Seçili görevler yönetici gerektiriyor.")
             return
 
         self.output_text.delete("1.0", END)
@@ -736,7 +736,7 @@ class MaintenanceApp(tk.Tk):
             ),
         ]
         if not is_admin():
-            messagebox.showwarning("Yönetici Yetkisi Gerekli", "Hızlı bakım için yönetici izni gerekli.")
+            messagebox.showwarning("OYAX - Yönetici Yetkisi Gerekli", "Hızlı bakım için yönetici izni gerekli.")
             return
         self.output_text.delete("1.0", END)
         self.append_output("Hızlı bakım başlatıldı...")
@@ -750,7 +750,7 @@ class MaintenanceApp(tk.Tk):
             messagebox.showinfo("Bilgi", "Çalıştırmak için bir komut gir.")
             return
         if self.custom_admin_var.get() and not is_admin():
-            messagebox.showwarning("Yönetici Yetkisi Gerekli", "Bu özel komut yönetici yetkisi gerektiriyor.")
+            messagebox.showwarning("OYAX - Yönetici Yetkisi Gerekli", "Bu özel komut yönetici yetkisi gerektiriyor.")
             return
         self.output_text.delete("1.0", END)
         self.append_output(f"Özel komut başlatıldı: {command}")
@@ -860,14 +860,14 @@ class MaintenanceApp(tk.Tk):
 
     def open_about_dialog(self) -> None:
         about = tk.Toplevel(self)
-        about.title("Hakkında")
+        about.title("OYAX - Hakkında")
         try:
             icon_path = resource_path("icon.ico")
             about.iconbitmap(icon_path)
         except:
             pass
         width = 560
-        height = 340
+        height = 280
 
         screen_width = about.winfo_screenwidth()
         screen_height = about.winfo_screenheight()
