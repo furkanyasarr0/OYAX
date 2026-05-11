@@ -18,9 +18,9 @@ from tkinter import ttk, filedialog
 # from license_system import OyaxLicense
 
 
-
 # AppData yolunu bul ve Oyax klasörü yoksa oluştur
-APPDATA_PATH = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Oyax')
+APPDATA_PATH = os.path.join(os.environ.get(
+    'APPDATA', os.path.expanduser('~')), 'Oyax')
 if not os.path.exists(APPDATA_PATH):
     os.makedirs(APPDATA_PATH)
 
@@ -31,7 +31,8 @@ AUTHOR_NAME = "furkanysrr0"
 
 TASK_CATEGORIES = {
     "Geçici Dosyalar ve Cache": [
-        {"name": "Geçici Dosyaları Temizle", "requires_admin": False, "type": "python"},
+        {"name": "Geçici Dosyaları Temizle",
+            "requires_admin": False, "type": "python"},
         {
             "name": "Windows Temp Temizliği (powershell)",
             "requires_admin": True,
@@ -110,7 +111,8 @@ TASK_CATEGORIES = {
         },
     ],
     "Sistem Sağlığı": [
-        {"name": "SFC Taraması (sfc /scannow)", "requires_admin": True, "type": "command", "command": "sfc /scannow"},
+        {"name": "SFC Taraması (sfc /scannow)", "requires_admin": True,
+                                "type": "command", "command": "sfc /scannow"},
         {
             "name": "DISM Health Check",
             "requires_admin": True,
@@ -129,7 +131,8 @@ TASK_CATEGORIES = {
             "type": "command",
             "command": "DISM /Online /Cleanup-Image /RestoreHealth",
         },
-        {"name": "Disk Tarama (chkdsk /scan)", "requires_admin": True, "type": "command", "command": "chkdsk /scan"},
+        {"name": "Disk Tarama (chkdsk /scan)", "requires_admin": True,
+                               "type": "command", "command": "chkdsk /scan"},
     ],
 }
 
@@ -181,7 +184,8 @@ def add_log(task_name: str, status: str, details: str) -> None:
             cur = conn.cursor()
             cur.execute(
                 "INSERT INTO logs (timestamp, task_name, status, details) VALUES (?, ?, ?, ?)",
-                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), task_name, status, details),
+                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                 task_name, status, details),
             )
     except Exception:
         pass
@@ -239,17 +243,23 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 class MaintenanceApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("OYAX - Windows Bakım Aracı")
 
-        self.geometry("1220x760")
-        try:
-            icon_path = resource_path("icon.ico")
-            self.iconbitmap(icon_path)
-        except:
-            pass
+        width = 1220
+        height = 760
+
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+
+        self.geometry(f"{width}x{height}+{x}+{y}")
+
         self.minsize(1080, 640)
         self.resizable(True, True)
         self.configure(bg="#0f172a")
@@ -845,13 +855,22 @@ class MaintenanceApp(tk.Tk):
 
     def open_about_dialog(self) -> None:
         about = tk.Toplevel(self)
-        about.title("Hakkinda")
+        about.title("Hakkında")
         try:
             icon_path = resource_path("icon.ico")
             about.iconbitmap(icon_path)
         except:
             pass
-        about.geometry("560x340")
+        width = 560
+        height = 340
+
+        screen_width = about.winfo_screenwidth()
+        screen_height = about.winfo_screenheight()
+
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+
+        about.geometry(f"{width}x{height}+{x}+{y}")
         about.resizable(False, False)
         about.configure(bg="#111827")
         about.transient(self)
@@ -860,15 +879,15 @@ class MaintenanceApp(tk.Tk):
         container = ttk.Frame(about, style="Card.TFrame", padding=14)
         container.pack(fill=BOTH, expand=True)
 
-        ttk.Label(container, text="OYAX - Windows Bakim Araci", style="HeaderTitle.TLabel").pack(anchor="w")
-        ttk.Label(container, text=f"Surum: {APP_VERSION}", style="HeaderSub.TLabel").pack(anchor="w", pady=(2, 0))
-        ttk.Label(container, text=f"Aciklamayi Yazan: {AUTHOR_NAME}", style="HeaderSub.TLabel").pack(anchor="w", pady=(0, 12))
+        ttk.Label(container, text="OYAX - Windows Bakım Aracı", style="HeaderTitle.TLabel").pack(anchor="w")
+        ttk.Label(container, text=f"Sürüm: {APP_VERSION}", style="HeaderSub.TLabel").pack(anchor="w", pady=(2, 0))
+        ttk.Label(container, text=f"Geliştirici: {AUTHOR_NAME}", style="HeaderSub.TLabel").pack(anchor="w", pady=(0, 12))
 
         ttk.Label(
             container,
             text=(
-                "Bu arac Windows bakim komutlarini tek panelde sunar.\n"
-                "GitHub yayinina baglanip yeni surum kontrolu yapabilir."
+                "Bu araç Windows bakım komutlarını tek panelde sunar.\n"
+                "GitHub reposundan güncel versiyonları kontrol etmeyi unutmayın."
             ),
             style="Muted.TLabel",
         ).pack(anchor="w")
