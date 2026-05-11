@@ -248,6 +248,11 @@ class MaintenanceApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("OYAX - Windows Bakım Aracı")
+        try:
+            icon_path = resource_path("icon.ico")
+            self.iconbitmap(icon_path)
+        except:
+            pass
 
         width = 1220
         height = 760
