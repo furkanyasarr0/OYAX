@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import sqlite3
 import subprocess
@@ -13,7 +14,9 @@ from pathlib import Path
 from tkinter import END, BOTH, LEFT, RIGHT, X, Y, VERTICAL, messagebox
 import tkinter as tk
 from tkinter import ttk, filedialog
-from license_system import OyaxLicense
+
+# from license_system import OyaxLicense
+
 
 
 # AppData yolunu bul ve Oyax klasörü yoksa oluştur
@@ -22,7 +25,6 @@ if not os.path.exists(APPDATA_PATH):
     os.makedirs(APPDATA_PATH)
 
 DB_FILE = os.path.join(APPDATA_PATH, "maintenance_logs.db")
-LICENSE_DB = os.path.join(APPDATA_PATH, "licenses.db")
 APP_VERSION = "1.0"
 AUTHOR_NAME = "furkanysrr0"
 
@@ -158,40 +160,37 @@ def is_admin() -> bool:
 
 
 def ensure_db() -> None:
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            task_name TEXT NOT NULL,
-            status TEXT NOT NULL,
-            details TEXT
+    with sqlite3.connect(DB_FILE) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                task_name TEXT NOT NULL,
+                status TEXT NOT NULL,
+                details TEXT
+            )
+            """
         )
-        """
-    )
-    conn.commit()
-    conn.close()
 
 
 def add_log(task_name: str, status: str, details: str) -> None:
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO logs (timestamp, task_name, status, details) VALUES (?, ?, ?, ?)",
-        (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), task_name, status, details),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO logs (timestamp, task_name, status, details) VALUES (?, ?, ?, ?)",
+                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), task_name, status, details),
+            )
+    except Exception:
+        pass
 
 
 def clear_logs() -> None:
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute("DELETE FROM logs")
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_FILE) as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM logs")
 
 
 def cleanup_temp_directories() -> tuple[str, int]:
@@ -231,34 +230,29 @@ def cleanup_temp_directories() -> tuple[str, int]:
     return details, len(errors)
 
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 class MaintenanceApp(tk.Tk):
     def __init__(self) -> None:
-        # Initialize properties used in license management
-        self.current_license_key = ""
-        self.license_status = "no_license"
-        
-        # Try to load saved license key from SQLite
-        self.load_license_from_db()
-
-        # Initialize the new licensing system
-        self.lic_sys = OyaxLicense(APP_VERSION)
-        
-        if not self.show_login_gate():
-            # If license is not valid, we don't even start the main window properly
-            return
-
         super().__init__()
         self.title("OYAX - Windows Bakım Aracı")
+
         self.geometry("1220x760")
         try:
-            self.iconbitmap("icon.ico")
+            icon_path = resource_path("icon.ico")
+            self.iconbitmap(icon_path)
         except:
             pass
         self.minsize(1080, 640)
         self.resizable(True, True)
         self.configure(bg="#0f172a")
-        
-        self.is_licensed = True
 
         self.style = ttk.Style(self)
         self.style.theme_use("clam")
@@ -271,113 +265,6 @@ class MaintenanceApp(tk.Tk):
         ensure_db()
         self._build_ui()
         self.refresh_logs()
-
-    def load_license_from_db(self):
-        """Loads the license key from the local database."""
-        try:
-            conn = sqlite3.connect(DB_FILE)
-            cur = conn.cursor()
-            cur.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
-            cur.execute("SELECT value FROM settings WHERE key = 'license_key'")
-            row = cur.fetchone()
-            if row:
-                self.current_license_key = row[0]
-            conn.close()
-        except Exception:
-            pass
-
-    def save_license_to_db(self, key):
-        """Saves the license key to the local database."""
-        try:
-            conn = sqlite3.connect(DB_FILE)
-            cur = conn.cursor()
-            cur.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
-            cur.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('license_key', ?)", (key,))
-            conn.commit()
-            conn.close()
-        except Exception:
-            pass
-
-    def show_login_gate(self):
-        """Shows a login window before the main app starts."""
-        gate = tk.Tk()
-        gate.title("OYAX - Lisans Kontrol")
-        try:
-            gate.iconbitmap("icon.ico")
-        except:
-            pass
-        gate.geometry("400x220")
-        gate.configure(bg="#111827")
-        gate.resizable(False, False)
-        gate.attributes("-topmost", True)
-        
-        # Center the window
-        gate.update_idletasks()
-        w = gate.winfo_width()
-        h = gate.winfo_height()
-        x = (gate.winfo_screenwidth() // 2) - (w // 2)
-        y = (gate.winfo_screenheight() // 2) - (h // 2)
-        gate.geometry(f'+{x}+{y}')
-
-        success = [False]
-
-        tk.Label(gate, text="OYAX Lisans Sistemi", bg="#111827", fg="#f9fafb", font=("Segoe UI", 14, "bold")).pack(pady=20)
-        
-        key_var = tk.StringVar()
-        # Auto-load key from memory (which was loaded from DB in __init__)
-        if self.current_license_key:
-            key_var.set(self.current_license_key)
-
-        entry = tk.Entry(gate, textvariable=key_var, width=30, font=("Consolas", 12), justify="center")
-        entry.pack(pady=10)
-
-        # Status label for remaining days
-        status_label = tk.Label(gate, text="Kontrol ediliyor...", bg="#111827", fg="#9ca3af", font=("Segoe UI", 10))
-        status_label.pack(pady=5)
-
-        def update_status_on_change(*args):
-            key = key_var.get().strip()
-            if len(key) > 5:
-                def check_thread():
-                    valid, msg = self.lic_sys.check_license(key)
-                    if gate.winfo_exists(): # Check if window still exists
-                        if valid:
-                            gate.after(0, lambda: status_label.config(text=msg, fg="#10b981"))
-                        else:
-                            gate.after(0, lambda: status_label.config(text="Geçersiz Anahtar", fg="#ef4444"))
-                
-                threading.Thread(target=check_thread, daemon=True).start()
-            else:
-                status_label.config(text="Anahtar giriniz", fg="#9ca3af")
-
-        key_var.trace_add("write", update_status_on_change)
-        
-        # Initial check if there's a key
-        if self.current_license_key:
-            update_status_on_change()
-        else:
-            status_label.config(text="Anahtar bekleniyor...")
-
-        def attempt_login():
-            key = key_var.get().strip()
-            if not key:
-                messagebox.showerror("Hata", "Lütfen bir anahtar girin.", parent=gate)
-                return
-            
-            valid, msg = self.lic_sys.check_license(key)
-            if valid:
-                self.save_license_to_db(key)
-                self.current_license_key = key
-                self.license_status = "valid"
-                success[0] = True
-                gate.destroy()
-            else:
-                messagebox.showerror("Lisans Hatası", msg, parent=gate)
-
-        tk.Button(gate, text="Kontrol Et", command=attempt_login, bg="#2563eb", fg="white", font=("Segoe UI", 10, "bold"), width=15).pack(pady=20)
-        
-        gate.mainloop()
-        return success[0]
 
     def _configure_styles(self) -> None:
         self.style.configure(".", font=("Segoe UI", 10))
@@ -500,23 +387,23 @@ class MaintenanceApp(tk.Tk):
         left_panel.pack(side=LEFT, fill=Y, padx=(0, 10))
         left_panel.pack_propagate(False)
 
-        ttk.Label(left_panel, text="Gorev Menusu", style="TaskMenuTitle.TLabel").pack(anchor="w")
+        ttk.Label(left_panel, text="Görev Menüsü", style="TaskMenuTitle.TLabel").pack(anchor="w")
         ttk.Label(
             left_panel,
-            text="Kategoriye gore filtrele ve gorev secimi yap.",
+            text="Kategoriye göre filtrele ve görev seçimi yap.",
             style="TaskMenuSub.TLabel",
         ).pack(anchor="w", pady=(2, 10))
 
         status_box = ttk.Frame(left_panel, style="TaskCard.TFrame", padding=10)
         status_box.pack(fill=X, pady=(0, 10))
-        self.selection_summary_var = tk.StringVar(value="Secili gorev: 0")
+        self.selection_summary_var = tk.StringVar(value="Seçili görev: 0")
         ttk.Label(status_box, textvariable=self.selection_summary_var, style="TaskMenuTitle.TLabel").pack(anchor="w")
         badge_row = ttk.Frame(status_box, style="TaskCard.TFrame")
         badge_row.pack(fill=X, pady=(6, 0))
         self.admin_required_var = tk.StringVar(value="Admin gerektiren: 0")
         self.admin_required_badge = ttk.Label(badge_row, textvariable=self.admin_required_var, style="StatusNeutral.TLabel")
         self.admin_required_badge.pack(side=LEFT)
-        self.admin_note_var = tk.StringVar(value="Admin modu: Kapali")
+        self.admin_note_var = tk.StringVar(value="Admin modu: Kapalı")
         self.admin_mode_badge = ttk.Label(badge_row, textvariable=self.admin_note_var, style="StatusNeutral.TLabel")
         self.admin_mode_badge.pack(side=LEFT, padx=(6, 0))
 
@@ -551,9 +438,9 @@ class MaintenanceApp(tk.Tk):
         task_header = ttk.Frame(menu_content, style="TaskMenu.TFrame")
         task_header.pack(fill=X, pady=(0, 6))
         ttk.Label(task_header, text="Uygulanabilir Gorevler", style="TaskMenuTitle.TLabel").pack(side=LEFT)
-        self.visible_tasks_var = tk.StringVar(value="Gorunen: 0")
+        self.visible_tasks_var = tk.StringVar(value="Görünen: 0")
         ttk.Label(task_header, textvariable=self.visible_tasks_var, style="TaskMenuSub.TLabel").pack(side=RIGHT)
-        ttk.Label(menu_content, text="Ctrl ile coklu secim yapabilirsin.", style="TaskMenuSub.TLabel").pack(
+        ttk.Label(menu_content, text="Ctrl ile çoklu seçim yapabilirsin.", style="TaskMenuSub.TLabel").pack(
             anchor="w", pady=(0, 6)
         )
         task_list_box = ttk.Frame(menu_content, style="TaskCard.TFrame", padding=2)
@@ -599,16 +486,15 @@ class MaintenanceApp(tk.Tk):
         ttk.Separator(action_box).pack(fill=X, pady=(2, 10))
 
         self.run_btn = ttk.Button(
-            action_box, text="Secili Gorevleri Calistir", style="Primary.TButton", command=self.run_selected_tasks
+            action_box, text="Seçili Görevleri Çalıştır", style="Primary.TButton", command=self.run_selected_tasks
         )
         self.run_btn.pack(fill=X, pady=(4, 6))
 
         self.quick_btn = ttk.Button(
-            action_box, text="Hizli Bakim (Temp + FlushDNS)", style="Secondary.TButton", command=self.run_quick_maintenance
+            action_box, text="Hızlı Bakım (Temp + FlushDNS)", style="Secondary.TButton", command=self.run_quick_maintenance
         )
         self.quick_btn.pack(fill=X, pady=(0, 6))
-        ttk.Button(action_box, text="Hakkinda", style="Secondary.TButton", command=self.open_about_dialog).pack(fill=X)
-        ttk.Button(action_box, text="Lisans Yönetimi", style="Secondary.TButton", command=self.open_license_dialog).pack(fill=X, pady=(6, 0))
+        ttk.Button(action_box, text="Hakkında", style="Secondary.TButton", command=self.open_about_dialog).pack(fill=X)
 
         right_panel = ttk.Frame(main_frame, style="Card.TFrame")
         right_panel.pack(side=RIGHT, fill=BOTH, expand=True)
@@ -638,7 +524,7 @@ class MaintenanceApp(tk.Tk):
         self.content_pane = ttk.PanedWindow(right_panel, orient=tk.VERTICAL)
         self.content_pane.pack(fill=BOTH, expand=True)
 
-        output_box = ttk.LabelFrame(self.content_pane, text="Canli Cikti", style="Section.TLabelframe", padding=8)
+        output_box = ttk.LabelFrame(self.content_pane, text="Canlı Çıktı", style="Section.TLabelframe", padding=8)
 
         self.output_text = tk.Text(
             output_box,
@@ -653,13 +539,13 @@ class MaintenanceApp(tk.Tk):
         )
         self.output_text.pack(fill=BOTH, expand=True)
 
-        history_box = ttk.LabelFrame(self.content_pane, text="Islem Gecmisi (SQLite)", style="Section.TLabelframe", padding=10)
+        history_box = ttk.LabelFrame(self.content_pane, text="İşlem Geçmişi (SQLite)", style="Section.TLabelframe", padding=10)
         self.history_box = history_box
 
         history_header = ttk.Frame(history_box, style="HistoryCard.TFrame")
         history_header.pack(fill=X, pady=(0, 8))
-        ttk.Label(history_header, text="Islem Gecmisi", style="HistoryTitle.TLabel").pack(side=LEFT)
-        self.history_meta_var = tk.StringVar(value="Son 200 kayit")
+        ttk.Label(history_header, text="İşlem Geçmişi", style="HistoryTitle.TLabel").pack(side=LEFT)
+        self.history_meta_var = tk.StringVar(value="Son 200 kayıt")
         ttk.Label(history_header, textvariable=self.history_meta_var, style="HistorySub.TLabel").pack(side=RIGHT)
 
         history_stats = ttk.Frame(history_box, style="HistoryCard.TFrame")
@@ -879,11 +765,16 @@ class MaintenanceApp(tk.Tk):
             else:
                 command = task["command"]
                 self.after(0, self.append_output, f"Komut: {command}")
+                
+                # Use a timeout for subprocess calls to prevent hanging
                 process = subprocess.run(
                     command,
                     shell=True,
                     capture_output=True,
                     text=True,
+                    encoding='cp857', # Windows Turkish encoding
+                    errors='replace',
+                    timeout=300 # 5 minutes timeout
                 )
                 stdout = (process.stdout or "").strip()
                 stderr = (process.stderr or "").strip()
@@ -899,7 +790,10 @@ class MaintenanceApp(tk.Tk):
                 self.after(0, self.append_output, details)
                 add_log(task_name, status, details + f" | {output[:400]}")
 
-            self.after(0, self.append_output, "Görev tamamlandı.")
+        except subprocess.TimeoutExpired:
+            error_msg = f"Hata: Görev zaman aşımına uğradı (5 dakika)."
+            self.after(0, self.append_output, error_msg)
+            add_log(task_name, "Hata", error_msg)
         except Exception as ex:
             error_msg = f"Beklenmeyen hata: {ex}"
             self.after(0, self.append_output, error_msg)
@@ -926,30 +820,35 @@ class MaintenanceApp(tk.Tk):
         if not save_path:
             return
 
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT timestamp, task_name, status, details
-            FROM logs
-            ORDER BY id DESC
-            """
-        )
-        rows = cur.fetchall()
-        conn.close()
+        try:
+            with sqlite3.connect(DB_FILE) as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    SELECT timestamp, task_name, status, details
+                    FROM logs
+                    ORDER BY id DESC
+                    """
+                )
+                rows = cur.fetchall()
 
-        with open(save_path, "w", newline="", encoding="utf-8-sig") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["timestamp", "task_name", "status", "details"])
-            writer.writerows(rows)
+            with open(save_path, "w", newline="", encoding="utf-8-sig") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["timestamp", "task_name", "status", "details"])
+                writer.writerows(rows)
 
-        self.append_output(f"CSV dışa aktarma tamamlandı: {save_path}")
+            self.append_output(f"CSV dışa aktarma tamamlandı: {save_path}")
+        except Exception as ex:
+            error_msg = f"Dışa aktarma hatası: {ex}"
+            self.append_output(error_msg)
+            messagebox.showerror("Hata", error_msg)
 
     def open_about_dialog(self) -> None:
         about = tk.Toplevel(self)
         about.title("Hakkinda")
         try:
-            about.iconbitmap("icon.ico")
+            icon_path = resource_path("icon.ico")
+            about.iconbitmap(icon_path)
         except:
             pass
         about.geometry("560x340")
@@ -974,8 +873,8 @@ class MaintenanceApp(tk.Tk):
             style="Muted.TLabel",
         ).pack(anchor="w")
 
-        status_var = tk.StringVar(value="Durum: Guncelleme kontrol edilmedi.")
-        latest_var = tk.StringVar(value="GitHub Repo: algilanmadi")
+        status_var = tk.StringVar(value="Durum: Kontrol Edilmedi")
+        latest_var = tk.StringVar(value="GitHub Repo: Kontrol Edilmedi")
         ttk.Label(container, textvariable=latest_var, style="HeaderSub.TLabel").pack(anchor="w", pady=(14, 4))
         ttk.Label(container, textvariable=status_var, style="HeaderSub.TLabel").pack(anchor="w", pady=(0, 10))
 
@@ -1025,7 +924,7 @@ class MaintenanceApp(tk.Tk):
                     lambda: status_var.set(f"Durum: Yeni surum var ({latest_tag}) - mevcut: {APP_VERSION}"),
                 )
             else:
-                self.after(0, lambda: status_var.set(f"Durum: Guncel surum kullaniyorsun ({APP_VERSION})"))
+                self.after(0, lambda: status_var.set(f"Durum: En Son Sürümü Kullanıyorsunuz! ({APP_VERSION})"))
         except Exception as ex:
             self.after(0, lambda: status_var.set(f"Durum: Guncelleme kontrol hatasi: {ex}"))
 
@@ -1088,30 +987,34 @@ class MaintenanceApp(tk.Tk):
 
         where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
-        cur.execute(
-            f"""
-            SELECT timestamp, task_name, status, details
-            FROM logs
-            {where_clause}
-            ORDER BY id DESC
-            LIMIT 200
-            """,
-            params,
-        )
-        rows = cur.fetchall()
-        cur.execute(
-            f"""
-            SELECT status, COUNT(*)
-            FROM logs
-            {where_clause}
-            GROUP BY status
-            """,
-            params,
-        )
-        status_counts = dict(cur.fetchall())
-        conn.close()
+        try:
+            with sqlite3.connect(DB_FILE) as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    f"""
+                    SELECT timestamp, task_name, status, details
+                    FROM logs
+                    {where_clause}
+                    ORDER BY id DESC
+                    LIMIT 200
+                    """,
+                    params,
+                )
+                rows = cur.fetchall()
+                cur.execute(
+                    f"""
+                    SELECT status, COUNT(*)
+                    FROM logs
+                    {where_clause}
+                    GROUP BY status
+                    """,
+                    params,
+                )
+                status_counts = dict(cur.fetchall())
+        except Exception as ex:
+            print(f"Veritabani hatasi: {ex}")
+            rows = []
+            status_counts = {}
 
         for row in rows:
             self.log_tree.insert("", END, values=row)
@@ -1119,179 +1022,8 @@ class MaintenanceApp(tk.Tk):
         self.history_warn_var.set(f"Uyari: {status_counts.get('Uyarı', 0)}")
         self.history_err_var.set(f"Hata: {status_counts.get('Hata', 0)}")
         self.history_meta_var.set(f"Gosterilen kayit: {len(rows)}")
-    
-    def check_license_on_startup(self):
-        """Check license on application startup"""
-        # Try to load saved license key
-        try:
-            with open("license.key", "r") as f:
-                saved_key = f.read().strip()
-            if saved_key:
-                is_valid, message = self.license_manager.verify_license(saved_key)
-                if is_valid:
-                    self.current_license_key = saved_key
-                    self.license_status = "valid"
-                    self.append_output(f"Lisans doğrulandı: {message}")
-                else:
-                    self.license_status = "invalid"
-                    self.show_license_warning(message)
-        except FileNotFoundError:
-            self.license_status = "no_license"
-            self.show_license_warning("Lisans anahtarı bulunamadı. Lütfen geçerli bir lisans girin.")
-        except Exception as e:
-            self.license_status = "error"
-            self.show_license_warning(f"Lisans kontrol hatası: {e}")
-    
-    def show_license_warning(self, message):
-        """Show license warning dialog"""
-        warning_dialog = tk.Toplevel(self)
-        warning_dialog.title("Lisans Uyarısı")
-        try:
-            warning_dialog.iconbitmap("icon.ico")
-        except:
-            pass
-        warning_dialog.geometry("500x300")
-        warning_dialog.resizable(False, False)
-        warning_dialog.configure(bg="#111827")
-        warning_dialog.transient(self)
-        warning_dialog.grab_set()
-        
-        container = ttk.Frame(warning_dialog, style="Card.TFrame", padding=14)
-        container.pack(fill=BOTH, expand=True)
-        
-        ttk.Label(container, text="⚠️ Lisans Uyarısı", style="HeaderTitle.TLabel", font=("Segoe UI", 16, "bold")).pack(anchor="w", pady=(0, 10))
-        ttk.Label(container, text=message, style="Muted.TLabel", wraplength=450).pack(anchor="w", pady=(0, 20))
-        
-        button_row = ttk.Frame(container, style="Card.TFrame")
-        button_row.pack(fill=X, pady=(10, 0))
-        
-        ttk.Button(
-            button_row,
-            text="Lisans Gir",
-            style="Primary.TButton",
-            command=lambda: [warning_dialog.destroy(), self.open_license_dialog()]
-        ).pack(side=LEFT)
-        
-        if self.license_status == "invalid":
-            ttk.Button(
-                button_row,
-                text="Demo Mod",
-                style="Secondary.TButton",
-                command=warning_dialog.destroy
-            ).pack(side=RIGHT)
-        else:
-            ttk.Button(
-                button_row,
-                text="Kapat",
-                style="Secondary.TButton",
-                command=self.quit
-            ).pack(side=RIGHT)
-    
-    def open_license_dialog(self):
-        """Open license management dialog"""
-        license_dialog = tk.Toplevel(self)
-        license_dialog.title("Lisans Yönetimi")
-        try:
-            license_dialog.iconbitmap("icon.ico")
-        except:
-            pass
-        license_dialog.geometry("600x450")
-        license_dialog.resizable(False, False)
-        license_dialog.configure(bg="#111827")
-        license_dialog.transient(self)
-        license_dialog.grab_set()
-        
-        container = ttk.Frame(license_dialog, style="Card.TFrame", padding=20)
-        container.pack(fill=BOTH, expand=True)
-        
-        # Header
-        ttk.Label(container, text="Lisans Bilgileri", style="HeaderTitle.TLabel").pack(anchor="w")
-        ttk.Label(container, text=f"OYAX Sürüm: {APP_VERSION}", style="HeaderSub.TLabel").pack(anchor="w", pady=(2, 15))
-        
-        # Current License Info
-        status_frame = ttk.LabelFrame(container, text="Mevcut Lisans", style="Section.TLabelframe", padding=15)
-        status_frame.pack(fill=X, pady=(0, 20))
-        
-        # UI Elements for remaining days
-        key_label = ttk.Label(status_frame, text=f"Anahtar: {self.current_license_key[:8]}****{self.current_license_key[-4:] if len(self.current_license_key) > 4 else ''}", style="Muted.TLabel")
-        key_label.pack(anchor="w")
-        
-        remaining_label = ttk.Label(status_frame, text="Kontrol ediliyor...", style="TaskMenuTitle.TLabel", foreground="#9ca3af")
-        remaining_label.pack(anchor="w", pady=(5, 0))
-        
-        def check_async():
-            valid, msg = self.lic_sys.check_license(self.current_license_key)
-            if license_dialog.winfo_exists():
-                if valid:
-                    license_dialog.after(0, lambda: remaining_label.config(text=msg, foreground="#10b981"))
-                else:
-                    license_dialog.after(0, lambda: remaining_label.config(text="Lisans Geçersiz", foreground="#ef4444"))
-
-        threading.Thread(target=check_async, daemon=True).start()
-        
-        # New License Input
-        input_frame = ttk.LabelFrame(container, text="Yeni Lisans Tanımla", style="Section.TLabelframe", padding=15)
-        input_frame.pack(fill=X, pady=(0, 20))
-        
-        self.license_entry_var = tk.StringVar()
-        license_entry = ttk.Entry(input_frame, textvariable=self.license_entry_var, font=("Consolas", 11), justify="center")
-        license_entry.pack(fill=X, pady=(5, 10))
-        
-        ttk.Button(
-            input_frame,
-            text="Lisansı Güncelle",
-            style="Primary.TButton",
-            command=lambda: self.verify_and_save_license(license_dialog)
-        ).pack(fill=X)
-        
-        # Close button
-        ttk.Button(
-            container,
-            text="Kapat",
-            style="Secondary.TButton",
-            command=license_dialog.destroy
-        ).pack(fill=X)
-    
-    def verify_and_save_license(self, parent_dialog):
-        """Verify and save license key"""
-        license_key = self.license_entry_var.get().strip()
-        if not license_key:
-            messagebox.showwarning("Uyarı", "Lisans anahtarı girin.")
-            return
-        
-        is_valid, message = self.lic_sys.check_license(license_key)
-        
-        if is_valid:
-            self.current_license_key = license_key
-            self.license_status = "valid"
-            
-            # Save license key to DB
-            self.save_license_to_db(license_key)
-            
-            messagebox.showinfo("Başarılı", f"Lisans doğrulandı!\n{message}")
-            parent_dialog.destroy()
-            self.append_output(f"Lisans başarıyla yüklendi: {license_key[:16]}...")
-        else:
-            messagebox.showerror("Hata", f"Lisans doğrulanamadı!\n{message}")
-    
-    def generate_new_license(self, parent_dialog):
-        """Generate a new license key (Disabled - Needs Backend)"""
-        messagebox.showinfo("Bilgi", "Lisans oluşturma işlemi sadece yetkili panel üzerinden yapılabilir.")
-
-    def update_license_version(self, parent_dialog):
-        """Update license to new version (Disabled - Needs Backend)"""
-        messagebox.showinfo("Bilgi", "Sürüm güncelleme işlemi otomatik olarak sunucu tarafında yönetilmektedir.")
-
-    def add_version_requirement(self, parent_dialog):
-        """Add version requirement (Disabled - Needs Backend)"""
-        messagebox.showinfo("Bilgi", "Yönetici işlemleri için yetkili panel kullanılmalıdır.")
-
-    def show_all_licenses(self, parent_dialog):
-        """Show all licenses (Disabled - Needs Backend)"""
-        messagebox.showinfo("Bilgi", "Tüm lisansları görme yetkisi sadece sunucu yöneticisindedir.")
 
 
 if __name__ == "__main__":
     app = MaintenanceApp()
-    if hasattr(app, "is_licensed") and app.is_licensed:
-        app.mainloop()
+    app.mainloop()

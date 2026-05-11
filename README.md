@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#)
-[![License](https://img.shields.io/badge/license-Open_Source_%2B_VDS_Auth-green.svg)](#)
+[![License](https://img.shields.io/badge/license-Open_Source-green.svg)](#)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#)
 [![Stars](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)](https://github.com/furkanyasarr0/OYAX)
 
@@ -12,32 +12,28 @@
 
 ---
 
-**OYAX** is an open-source optimization tool with a secure license verification system that allows you to manage performance-enhancing maintenance and critical repair operations on the Windows operating system from a single interface.
+**OYAX** is a fully open-source optimization tool that allows you to manage performance-enhancing maintenance and critical repair operations on the Windows operating system from a single interface.
 
 ## ✨ Key Features
 
 - 🗂️ **Categorized Menu:** Dedicated control panels for Temporary files, Network/DNS, and System Health.
-- 🧹 **Advanced Cleaning:** 
-  - `Temp` and `Prefetch` directories.
+- 🧹 **Advanced Cleaning:** - `Temp` and `Prefetch` directories.
   - Recycle Bin.
   - Windows Store cache.
-- 🌐 **Network & DNS Optimization:** 
-  - Flush DNS cache.
+- 🌐 **Network & DNS Optimization:** - Flush DNS cache.
   - IP Release/Renew.
   - Winsock protocol reset.
-- 🛡️ **Critical System Repair:** 
-  - File verification with `SFC Scannow`.
+- 🛡️ **Critical System Repair:** - File verification with `SFC Scannow`.
   - Image repair with `DISM` tools.
   - `chkdsk` disk error scanning.
 - 🚀 **Quick Maintenance Mode:** Runs the most critical tasks sequentially with a single click.
 - 📊 **SQLite Registry:** Keeps a history of operations and allows you to export as CSV.
-- 🔑 **VDS License System:** VDS-based HWID matched verification for application security.
 
-## 📸 Screenshots
+## 📸 Screenshot
 
-| Main Control Panel | License Verification |
-| :---: | :---: |
-| ![Main Screen](https://via.placeholder.com/400x250?text=OYAX+Dashboard) | ![License Control](https://via.placeholder.com/400x250?text=VDS+Auth+System) |
+<div align="center">
+  <img src="[https://via.placeholder.com/600x350?text=OYAX+Dashboard](https://via.placeholder.com/600x350?text=OYAX+Dashboard)" alt="OYAX Main Screen">
+</div>
 
 ## 🚀 Installation and Usage
 
@@ -56,8 +52,7 @@ Follow the steps below to run the project on your computer.
    .\venv\Scripts\activate
    ```
 4. Start the application:
-   
-```powershell
+   ```powershell
    python app.py
    ```
 
@@ -69,13 +64,10 @@ Follow the steps below to run the project on your computer.
 - **Programming Language:** Python
 - **Interface (UI):** Tkinter (Modernized, user-friendly theme)
 - **Database:** SQLite3 (For transaction logs)
-- **Security:** HWID-based API verification via remote VDS server.
 
 ## 🛡️ License and Terms of Use
 
-The source codes of this project are shared as **Open Source**. You can examine the code structure and contribute to its development.
-
-However, the full functional operation and authorization processes of the application are subject to the **VDS_License** (Private VDS Verification) system managed by the developer. Unauthorized commercial distribution is prohibited.
+This project is entirely **Open Source**. The application is completely free of any restrictive license or hardware verification systems. You are welcome to use the application, examine the source code, modify it to suit your needs, and contribute to its ongoing development.
 
 ---
 **Developer:** [furkanysrr0](https://github.com/furkanyasarr0)
