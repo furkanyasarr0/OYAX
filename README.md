@@ -6,13 +6,9 @@
   
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
-
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#)
-
 [![License](https://img.shields.io/badge/license-Open_Source-green.svg)](#)
-
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#)
-
 [![Stars](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)](https://github.com/furkanyasarr0/OYAX)
 
   
