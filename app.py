@@ -505,10 +505,20 @@ class MaintenanceApp(tk.Tk):
         )
         self.run_btn.pack(fill=X, pady=(4, 6))
 
-        self.quick_btn = ttk.Button(
-            action_box, text="Hızlı Bakım (Temp + FlushDNS)", style="Secondary.TButton", command=self.run_quick_maintenance
+        # Winget upgrade and quick maintenance buttons in same row
+        maintenance_row = ttk.Frame(action_box, style="TaskMenu.TFrame")
+        maintenance_row.pack(fill=X, pady=(0, 6))
+        
+        self.winget_btn = ttk.Button(
+            maintenance_row, text="Winget Tümünü Güncelle", style="Secondary.TButton", command=self.run_winget_upgrade_all
         )
-        self.quick_btn.pack(fill=X, pady=(0, 6))
+        self.winget_btn.pack(side=LEFT, fill=X, expand=True, padx=(0, 3))
+        
+        self.quick_btn = ttk.Button(
+            maintenance_row, text="Hızlı Bakım", style="Secondary.TButton", command=self.run_quick_maintenance
+        )
+        self.quick_btn.pack(side=LEFT, fill=X, expand=True, padx=(3, 0))
+        
         ttk.Button(action_box, text="Hakkında", style="Secondary.TButton", command=self.open_about_dialog).pack(fill=X)
 
         right_panel = ttk.Frame(main_frame, style="Card.TFrame")
@@ -642,6 +652,7 @@ class MaintenanceApp(tk.Tk):
     def set_controls(self, enabled: bool) -> None:
         state = "normal" if enabled else "disabled"
         self.run_btn.configure(state=state)
+        self.winget_btn.configure(state=state)
         self.quick_btn.configure(state=state)
         self.custom_run_btn.configure(state=state)
         self.custom_command_entry.configure(state=state)
@@ -725,6 +736,17 @@ class MaintenanceApp(tk.Tk):
         self.append_output(f"Toplu görev başlatıldı. Görev sayısı: {len(selected_tasks)}")
         self.set_controls(False)
         thread = threading.Thread(target=self._run_batch_worker, args=(selected_tasks,), daemon=True)
+        thread.start()
+
+    def run_winget_upgrade_all(self) -> None:
+        if not is_admin():
+            messagebox.showwarning("OYAX - Yönetici Yetkisi Gerekli", "Winget güncelleme için yönetici izni gerekli.")
+            return
+        self.output_text.delete("1.0", END)
+        self.append_output("Winget tüm paketler güncelleniyor...")
+        self.set_controls(False)
+        winget_task = [("Winget Tümünü Güncelle", {"type": "command", "command": "winget upgrade --all"})]
+        thread = threading.Thread(target=self._run_batch_worker, args=(winget_task,), daemon=True)
         thread.start()
 
     def run_quick_maintenance(self) -> None:
