@@ -25,7 +25,7 @@ if not os.path.exists(APPDATA_PATH):
     os.makedirs(APPDATA_PATH)
 
 DB_FILE = os.path.join(APPDATA_PATH, "maintenance_logs.db")
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 AUTHOR_NAME = "furkanysrr0"
 
 
