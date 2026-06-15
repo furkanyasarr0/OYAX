@@ -30,7 +30,7 @@ if not os.path.exists(APPDATA_PATH):
     os.makedirs(APPDATA_PATH)
 
 DB_FILE = os.path.join(APPDATA_PATH, "maintenance_logs.db")
-APP_VERSION = "1.2.8"
+APP_VERSION = "1.3"
 AUTHOR_NAME = "furkanysrr0"
 
 TASK_CATEGORIES = {
@@ -526,14 +526,6 @@ class MaintenanceApp(tk.Tk):
         header_row = ttk.Frame(left_panel, style="Card.TFrame")
         header_row.pack(fill=X)
         ttk.Label(header_row, text="Görev Menüsü", style="TaskMenuTitle.TLabel").pack(side=LEFT)
-        self.view_toggle = ttk.Checkbutton(
-            header_row,
-            text="Gelişmiş Görünüm",
-            variable=self.advanced_mode,
-            command=self.toggle_view,
-            style="TCheckbutton"
-        )
-        self.view_toggle.pack(side=RIGHT)
 
         ttk.Label(left_panel, text="Kategoriye göre filtrele ve görev seçimi yap.", style="TaskMenuSub.TLabel").pack(anchor="w", pady=(2, 10))
 
@@ -1150,7 +1142,7 @@ class MaintenanceApp(tk.Tk):
             about.iconbitmap(icon_path)
         except:
             pass
-        width = 560
+        width = 700
         height = 340
         screen_width = about.winfo_screenwidth()
         screen_height = about.winfo_screenheight()
@@ -1158,7 +1150,7 @@ class MaintenanceApp(tk.Tk):
         y = (screen_height // 2) - (height // 2)
 
         about.geometry(f"{width}x{height}+{x}+{y}")
-        about.resizable(False, False)
+        about.resizable(True, True)
         about.configure(bg="#0f172a")
         about.transient(self)
         about.grab_set()
@@ -1184,6 +1176,20 @@ class MaintenanceApp(tk.Tk):
         button_row.pack(fill=X, pady=(8, 0))
         ttk.Button(button_row, text="GitHub Güncelleme Kontrolü", style="Primary.TButton", command=lambda: self.start_update_check(status_var, latest_var)).pack(side=LEFT)
         ttk.Button(button_row, text="Kapat", style="Secondary.TButton", command=about.destroy).pack(side=RIGHT)
+
+        ttk.Separator(container, orient="horizontal").pack(fill=X, pady=(12, 8))
+        
+        settings_row = ttk.Frame(container, style="Card.TFrame")
+        settings_row.pack(fill=X)
+        ttk.Label(settings_row, text="Ayarlar", style="TaskMenuTitle.TLabel").pack(side=LEFT)
+        self.view_toggle = ttk.Checkbutton(
+            settings_row,
+            text="Gelişmiş Görünüm",
+            variable=self.advanced_mode,
+            command=self.toggle_view,
+            style="TCheckbutton"
+        )
+        self.view_toggle.pack(side=RIGHT)
 
     def open_eula(self, event):
         webbrowser.open_new("https://github.com/furkanyasarr0/OYAX/blob/main/EULA.md")
