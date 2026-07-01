@@ -1,152 +1,20 @@
 import os
 import sys
-import shutil
-import sqlite3
 import subprocess
-import tempfile
 import threading
-import csv
 import json
 import webbrowser
-import re
 import urllib.request
 import queue
-from datetime import datetime, timedelta
-from pathlib import Path
-from tkinter import END, BOTH, LEFT, RIGHT, X, Y, VERTICAL, BOTTOM, messagebox
 import tkinter as tk
+from tkinter import END, BOTH, LEFT, RIGHT, X, Y, VERTICAL, BOTTOM, messagebox
 from tkinter import ttk, filedialog
 
-# Windows DPI Scaling (Bulanık görünümü ve laptop ölçekleme sorunlarını çözer)
-try:
-    import ctypes
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except Exception:
-    pass
+from core.config import DB_FILE, APP_VERSION, AUTHOR_NAME, TASK_CATEGORIES, TASKS
+from core.utils import apply_dpi_scaling, is_admin, cleanup_temp_directories, resource_path
+from core.database import DatabaseManager
 
-# AppData yolunu bul ve Oyax klasörü yoksa oluştur
-APPDATA_PATH = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Oyax')
-if not os.path.exists(APPDATA_PATH):
-    os.makedirs(APPDATA_PATH)
-
-DB_FILE = os.path.join(APPDATA_PATH, "maintenance_logs.db")
-APP_VERSION = "1.3"
-AUTHOR_NAME = "furkanysrr0"
-
-TASK_CATEGORIES = {
-    "Geçici Dosyalar ve Cache": [
-        {"name": "Geçici Dosyaları Temizle", "requires_admin": False, "type": "python"},
-        {
-            "name": "Windows Temp Temizliği (powershell)",
-            "requires_admin": True,
-            "type": "command",
-            "command": ["powershell", "-Command", "Get-ChildItem -Path C:\\Windows\\Temp -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"],
-        },
-        {
-            "name": "Prefetch Temizliği",
-            "requires_admin": True,
-            "type": "command",
-            "command": ["powershell", "-Command", "Remove-Item -Path C:\\Windows\\Prefetch\\* -Force -Recurse -ErrorAction SilentlyContinue"],
-        },
-        {
-            "name": "Geri Dönüşüm Kutusu Temizle",
-            "requires_admin": False,
-            "type": "command",
-            "command": ["powershell", "-Command", "Clear-RecycleBin -Force -ErrorAction SilentlyContinue"],
-        },
-        {
-            "name": "Microsoft Store Cache Sıfırla",
-            "requires_admin": False,
-            "type": "command",
-            "command": ["wsreset.exe"],
-        },
-    ],
-    "Ağ ve DNS": [
-        {"name": "DNS Önbelleğini Temizle (ipconfig /flushdns)", "requires_admin": True, "type": "command", "command": ["ipconfig", "/flushdns"]},
-        {"name": "DNS Önbelleğini Görüntüle", "requires_admin": False, "type": "command", "command": ["ipconfig", "/displaydns"]},
-        {"name": "DNS Yeniden Kaydet (ipconfig /registerdns)", "requires_admin": True, "type": "command", "command": ["ipconfig", "/registerdns"]},
-        {
-            "name": "IP Adresini Yenile (release + renew)",
-            "requires_admin": True,
-            "type": "command",
-            "command": ["powershell", "-Command", "ipconfig /release; ipconfig /renew"],
-        },
-        {"name": "ARP Cache Temizliği", "requires_admin": True, "type": "command", "command": ["arp", "-d", "*"]},
-    ],
-    "Ağ Sıfırlama": [
-        {"name": "Winsock Sıfırla (netsh winsock reset)", "requires_admin": True, "type": "command", "command": ["netsh", "winsock", "reset"]},
-        {"name": "TCP/IP Stack Sıfırla", "requires_admin": True, "type": "command", "command": ["netsh", "int", "ip", "reset"]},
-        {"name": "Windows Güvenlik Duvarını Sıfırla", "requires_admin": True, "type": "command", "command": ["netsh", "advfirewall", "reset"]},
-    ],
-    "Sistem Sağlığı": [
-        {"name": "SFC Taraması (sfc /scannow)", "requires_admin": True, "type": "command", "command": ["sfc", "/scannow"]},
-        {"name": "DISM Health Check", "requires_admin": True, "type": "command", "command": ["DISM", "/Online", "/Cleanup-Image", "/CheckHealth"]},
-        {"name": "DISM Scan Health", "requires_admin": True, "type": "command", "command": ["DISM", "/Online", "/Cleanup-Image", "/ScanHealth"]},
-        {"name": "DISM Restore Health", "requires_admin": True, "type": "command", "command": ["DISM", "/Online", "/Cleanup-Image", "/RestoreHealth"]},
-        {"name": "Disk Tarama (chkdsk /scan)", "requires_admin": True, "type": "command", "command": ["chkdsk", "/scan"]},
-    ],
-}
-
-def build_task_map() -> dict:
-    tasks: dict = {}
-    for category_name, category_tasks in TASK_CATEGORIES.items():
-        for task in category_tasks:
-            tasks[task["name"]] = {
-                "requires_admin": task["requires_admin"],
-                "type": task["type"],
-                "command": task.get("command"),
-                "category": category_name,
-            }
-    return tasks
-
-TASKS = build_task_map()
-
-def is_admin() -> bool:
-    try:
-        import ctypes
-        return bool(ctypes.windll.shell32.IsUserAnAdmin())
-    except Exception:
-        return False
-
-def cleanup_temp_directories() -> tuple:
-    deleted_count = 0
-    errors = []
-    temp_paths = [
-        Path(tempfile.gettempdir()),
-        Path(os.environ.get("TEMP", "")),
-        Path(os.environ.get("TMP", "")),
-        Path("C:/Windows/Temp"),
-    ]
-    unique_paths = []
-    for path in temp_paths:
-        if str(path) and path.exists() and path not in unique_paths:
-            unique_paths.append(path)
-
-    for folder in unique_paths:
-        try:
-            for item in folder.iterdir():
-                try:
-                    if item.is_dir():
-                        shutil.rmtree(item, ignore_errors=True)
-                    else:
-                        item.unlink(missing_ok=True)
-                    deleted_count += 1
-                except Exception as ex:
-                    errors.append(f"{item}: {ex}")
-        except Exception as ex:
-            errors.append(f"{folder}: {ex}")
-
-    details = f"Silinen öğe sayısı: {deleted_count}"
-    if errors:
-        details += f"\nAtlanan/Hatalı öğe sayısı: {len(errors)}"
-    return details, len(errors)
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+apply_dpi_scaling()
 
 class MaintenanceApp(tk.Tk):
     def __init__(self) -> None:
@@ -166,7 +34,6 @@ class MaintenanceApp(tk.Tk):
         
         try:
             self.overrideredirect(True)
-            # Uygulama açıldıktan hemen sonra görev çubuğu simgesini zorla göster
             self.after(100, lambda: (self.update_idletasks(), self._set_exstyle_for_taskbar()))
         except Exception:
             pass
@@ -180,11 +47,9 @@ class MaintenanceApp(tk.Tk):
         self.cancel_requested = False
         self.current_process = None
         self.task_queue = queue.Queue()
-        self.conn = sqlite3.connect(DB_FILE, check_same_thread=False)
+        self.db = DatabaseManager(DB_FILE)
 
-        self.ensure_db()
         self._build_ui()
-
         self.center_window(500, 660)
         
         try:
@@ -218,7 +83,10 @@ class MaintenanceApp(tk.Tk):
                 if action == "append_output":
                     self.append_output(msg["message"])
                 elif action == "add_log":
-                    self.add_log(msg["task_name"], msg["status"], msg["details"])
+                    try:
+                        self.db.add_log(msg["task_name"], msg["status"], msg["details"])
+                    except Exception as ex:
+                        self.append_output(f"SİSTEM HATASI (Log Kaydedilemedi): {ex}")
                 elif action == "update_progress":
                     self.progress_var.set(msg["value"])
                 elif action == "finish_batch":
@@ -240,38 +108,10 @@ class MaintenanceApp(tk.Tk):
             except:
                 pass
         try:
-            self.conn.close()
+            self.db.close()
         except Exception as ex:
             print(f"Kapanış hatası: {ex}")
         self.destroy()
-
-    def ensure_db(self) -> None:
-        with self.conn:
-            self.conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT NOT NULL,
-                    task_name TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    details TEXT
-                )
-                """
-            )
-
-    def add_log(self, task_name: str, status: str, details: str) -> None:
-        try:
-            with self.conn:
-                self.conn.execute(
-                    "INSERT INTO logs (timestamp, task_name, status, details) VALUES (?, ?, ?, ?)",
-                    (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), task_name, status, details),
-                )
-        except Exception as ex:
-            self.after(0, self.append_output, f"SİSTEM HATASI (Log Kaydedilemedi): {ex}")
-
-    def clear_logs(self) -> None:
-        with self.conn:
-            self.conn.execute("DELETE FROM logs")
 
     def center_window(self, width: int, height: int) -> None:
         screen_width = self.winfo_screenwidth()
@@ -453,7 +293,6 @@ class MaintenanceApp(tk.Tk):
             pass
 
     def _build_ui(self) -> None:
-        # Üst Başlık Çubuğu
         title_bar = tk.Frame(self, bg="#0f172a", relief="raised", bd=0)
         title_bar.pack(fill=X, side=tk.TOP)
         title_bar.bind("<Button-1>", self._start_move)
@@ -514,8 +353,6 @@ class MaintenanceApp(tk.Tk):
         except Exception:
             pass
 
-        # --- SORUNLU KISIM BURADAN İTİBAREN DÜZELTİLDİ ---
-        # Arayüzü tutan ana Container
         main_frame = ttk.Frame(self, style="App.TFrame", padding=10)
         main_frame.pack(fill=BOTH, expand=True)
 
@@ -738,7 +575,6 @@ class MaintenanceApp(tk.Tk):
             WS_EX_TOOLWINDOW = 0x00000080
             WS_EX_APPWINDOW = 0x00040000
             
-            # Tkinter'da görev çubuğu simgesini yönetmek için ana sarmalayıcı (wrapper) id'si gerekebilir
             hwnd = user32.GetParent(self.winfo_id())
             if not hwnd:
                 hwnd = self.winfo_id()
@@ -760,7 +596,6 @@ class MaintenanceApp(tk.Tk):
             pass
 
     def _restore_exstyle(self) -> None:
-        # Eski haline (gizli simge) döndürmek yerine her zaman görev çubuğunda kalmasını sağla
         self._set_exstyle_for_taskbar()
 
     def _create_taskbar_placeholder(self) -> None:
@@ -874,7 +709,6 @@ class MaintenanceApp(tk.Tk):
             self.simple_status_var.set("Durum: Bekleniyor...")
 
     def request_cancel(self) -> None:
-        # Note: messagebox is available from tkinter imports
         self.cancel_requested = True
         if self.current_process:
             try:
@@ -989,13 +823,11 @@ class MaintenanceApp(tk.Tk):
             messagebox.showwarning("Uyarı", "Lütfen işlem yapmak için en az bir görev seçin.")
             return
 
-        # 1. Admin yetkisi kontrolü ve onayı
         if any(task.get("requires_admin") for _, task in selected_tasks) and not is_admin():
             if messagebox.askyesno("Yönetici İzni Gerekli", "Seçili görevlerden bazıları yönetici yetkisi gerektiriyor.\n\nİşleme devam edebilmek için uygulamayı yönetici olarak yeniden başlatmak ister misin?"):
                 self.restart_as_admin()
             return
 
-        # 2. İşlemi başlatma onayı
         if not messagebox.askyesno("Onay", f"Seçilen {len(selected_tasks)} görevi çalıştırmak istediğine emin misin?"):
             return
 
@@ -1115,7 +947,7 @@ class MaintenanceApp(tk.Tk):
             self.current_process = None
 
     def clear_logs_with_confirm(self) -> None:
-        self.clear_logs()
+        self.db.clear_logs()
         self.refresh_logs()
         self.append_output("Log geçmişi temizlendi.")
 
@@ -1123,13 +955,7 @@ class MaintenanceApp(tk.Tk):
         save_path = filedialog.asksaveasfilename(title="Logları CSV Olarak Kaydet", defaultextension=".csv", filetypes=[("CSV dosyası", "*.csv")])
         if not save_path: return
         try:
-            cur = self.conn.cursor()
-            cur.execute("SELECT timestamp, task_name, status, details FROM logs ORDER BY id DESC")
-            rows = cur.fetchall()
-            with open(save_path, "w", newline="", encoding="utf-8-sig") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(["timestamp", "task_name", "status", "details"])
-                writer.writerows(rows)
+            self.db.export_to_csv(save_path)
             self.append_output(f"CSV dışa aktarma tamamlandı: {save_path}")
         except Exception as ex:
             self.append_output(f"Dışa aktarma hatası: {ex}")
@@ -1191,7 +1017,7 @@ class MaintenanceApp(tk.Tk):
         )
         self.view_toggle.pack(side=RIGHT)
 
-    def open_eula(self, event):
+    def open_eula(self, event) -> None:
         webbrowser.open_new("https://github.com/furkanyasarr0/OYAX/blob/main/EULA.md")
 
     def start_update_check(self, status_var: tk.StringVar, repo_var: tk.StringVar) -> None:
@@ -1252,41 +1078,8 @@ class MaintenanceApp(tk.Tk):
         status_filter = self.status_filter_var.get().strip()
         search_text = self.search_var.get().strip().lower()
 
-        conditions = []
-        params = []
-
-        if date_filter and date_filter != "Tümü":
-            now = datetime.now()
-            if date_filter == "Bugün":
-                cutoff_date = now.strftime("%Y-%m-%d 00:00:00")
-                conditions.append("timestamp >= ?")
-                params.append(cutoff_date)
-            elif date_filter == "Son 7 Gün":
-                cutoff_date = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-                conditions.append("timestamp >= ?")
-                params.append(cutoff_date)
-            elif date_filter == "Son 30 Gün":
-                cutoff_date = (now - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-                conditions.append("timestamp >= ?")
-                params.append(cutoff_date)
-
-        if status_filter and status_filter != "Tümü":
-            conditions.append("status = ?")
-            params.append(status_filter)
-
-        if search_text:
-            conditions.append("(LOWER(task_name) LIKE ? OR LOWER(details) LIKE ?)")
-            term = f"%{search_text}%"
-            params.extend([term, term])
-
-        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-
         try:
-            cur = self.conn.cursor()
-            cur.execute(f"SELECT timestamp, task_name, status, details FROM logs {where_clause} ORDER BY id DESC LIMIT 200", params)
-            rows = cur.fetchall()
-            cur.execute(f"SELECT status, COUNT(*) FROM logs {where_clause} GROUP BY status", params)
-            status_counts = dict(cur.fetchall())
+            rows, status_counts = self.db.get_logs(date_filter, status_filter, search_text)
         except Exception:
             rows = []
             status_counts = {}
