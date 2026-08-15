@@ -12,7 +12,6 @@ license_system.py
 # Distribution / Build
 dist/
 build/
-*.spec
 *.exe
 
 # Icons / Assets (Optional)

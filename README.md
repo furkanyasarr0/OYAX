@@ -3,9 +3,9 @@
 
 # 🛠️ OYAX - Windows Maintenance Tool
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
+[![Version](https://img.shields.io/badge/version-1.4-blue.svg)](#)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#)
-[![License](https://img.shields.io/badge/license-Open_Source-green.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#)
 [![Stars](https://img.shields.io/github/stars/furkanyasarr0/OYAX?style=social)](https://github.com/furkanyasarr0/OYAX)
 
@@ -21,11 +21,24 @@
 
   
 
-# ⭐ Changelog & Updates
+## ⭐ Changelog & Updates
 
   
 
-- `winget upgrade --all` is a Windows Package Manager command that updates all installed applications to their latest available versions. It helps keep software up to date quickly and efficiently through a single command in the Windows terminal.
+### v1.4
+- Added **4 new task categories**: Performance Optimization, Disk Management, Security, System Info
+- Added **20+ new maintenance tasks** (Defender scan, disk reports, startup programs, large file scan, etc.)
+- Thread-safe database operations with `threading.Lock`
+- CSV export button added to the History panel UI
+- Fixed PyInstaller build entry point (`OYAX.spec`)
+- Log clear now requires user confirmation
+- Improved subprocess encoding with `utf-8` fallback
+- Bare `except` blocks replaced with `except Exception` for better debugging
+- Version bump to 1.4
+
+### v1.3
+- `winget upgrade --all` support for bulk package updates
+- Initial public release with categorized task system
 
   
 
@@ -33,41 +46,25 @@
 
   
 
-- 🗂️ **Categorized Menu:** Dedicated control panels for Temporary files, Network/DNS, and System Health.
+- 🗂️ **Categorized Menu:** Dedicated control panels for Temporary files, Network/DNS, System Health, Performance, Disk Management, Security, and System Info.
 
-- 🧹 **Advanced Cleaning:** - `Temp` and `Prefetch` directories.
+- 🧹 **Advanced Cleaning:** `Temp`, `Prefetch`, Thumbnail Cache, Font Cache, Icon Cache, and Recycle Bin cleanup.
 
-- Recycle Bin.
+- 🌐 **Network & DNS Optimization:** Flush DNS cache, IP Release/Renew, Winsock protocol reset, active connections view.
 
-- Windows Store cache.
+- 🛡️ **Critical System Repair:** File verification with `SFC Scannow`, image repair with `DISM` tools, `chkdsk` disk scanning, component store cleanup.
 
-- 🌐 **Network & DNS Optimization:** - Flush DNS cache.
+- 🚀 **Performance Optimization:** Power plan management, Windows Update cache cleanup, visual effects tuning, fast startup toggle.
 
-- IP Release/Renew.
+- 💾 **Disk Management:** Defrag/TRIM optimization, disk space reports, large file scanning (500MB+), Compact OS queries.
 
-- Winsock protocol reset.
+- 🔒 **Security:** Windows Defender quick scan, definition updates, firewall status monitoring.
 
-- 🛡️ **Critical System Repair:** - File verification with `SFC Scannow`.
+- 📊 **System Info:** Hardware summary, driver list, installed updates, startup programs, running services.
 
-- Image repair with `DISM` tools.
+- ⚡ **Quick Maintenance Mode:** Runs the most critical tasks sequentially with a single click.
 
--  `chkdsk` disk error scanning.
-
-- 🚀 **Quick Maintenance Mode:** Runs the most critical tasks sequentially with a single click.
-
-- 📊 **SQLite Registry:** Keeps a history of operations and allows you to export as CSV.
-
-  
-
-## 📸 Screenshot
-
-  
-
-<div  align="center">
-
-<img src="[https://via.placeholder.com/600x350?text=OYAX+Dashboard](https://via.placeholder.com/600x350?text=OYAX+Dashboard)" alt="OYAX Main Screen">
-
-</div>
+- 📋 **SQLite Registry:** Keeps a history of operations with filtering, search, and CSV export.
 
   
 
@@ -93,7 +90,7 @@ Follow the steps below to run the project on your computer.
 
 2. Navigate to the project directory in the command line.
 
-3. Create and activate your virtual environment (venv):
+3. Create and activate your virtual environment (venv) and install dependencies:
 
 ```powershell
 
@@ -101,13 +98,15 @@ python -m venv venv
 
 .\venv\Scripts\activate
 
+pip install -r requirements.txt
+
 ```
 
 4. Start the application:
 
 ```powershell
 
-python app.py
+python OYAX.py
 
 ```
 
@@ -125,9 +124,9 @@ python app.py
 
 -  **Programming Language:** Python
 
--  **Interface (UI):** Tkinter (Modernized, user-friendly theme)
+-  **Interface (UI):** CustomTkinter (Modern Windows 11 Dark theme, sleek cards and sidebar)
 
--  **Database:** SQLite3 (For transaction logs)
+-  **Database:** SQLite3 (Thread-safe, for transaction logs)
 
   
 
@@ -135,7 +134,7 @@ python app.py
 
   
 
-This project is entirely **Open Source**. The application is completely free of any restrictive license or hardware verification systems. You are welcome to use the application, examine the source code, modify it to suit your needs, and contribute to its ongoing development.
+This project is entirely **Open Source** under the [MIT License](LICENSE). The application is completely free of any restrictive license or hardware verification systems. You are welcome to use the application, examine the source code, modify it to suit your needs, and contribute to its ongoing development.
 
   
 
